@@ -1,6 +1,5 @@
 #!flask/bin/python
-# -*- coding: cp949 -*-
-import os, traceback
+import os
 import hashlib
 import argparse
 from flask_cors import CORS
@@ -57,8 +56,6 @@ def generate_audio_response(text, speaker_id):
     global global_config
 
     model_name = os.path.basename(global_config.load_path)
-    isKorean=global_config.is_korean
-    
     hashed_text = hashlib.md5(text.encode('utf-8')).hexdigest()
 
     relative_dir_path = os.path.join(AUDIO_DIR, model_name)
@@ -71,9 +68,8 @@ def generate_audio_response(text, speaker_id):
         try:
             audio = synthesizer.synthesize(
                     [text], paths=[real_path], speaker_ids=[speaker_id],
-                    attention_trim=True, isKorean=isKorean)[0]
-        except Exception as e:
-            traceback.print_exc()
+                    attention_trim=True)[0]
+        except:
             return jsonify(success=False), 400
 
     return send_file(
@@ -89,7 +85,7 @@ def generate_audio_response(text, speaker_id):
 
 @app.route('/')
 def index():
-    text = request.args.get('text') or "µè°í ½ÍÀº ¹®ÀåÀ» ÀÔ·ÂÇØ ÁÖ¼¼¿ä."
+    text = request.args.get('text') or "ë“£ê³  ì‹¶ì€ ë¬¸ì¥ì„ ì…ë ¥í•´ ì£¼ì„¸ìš”."
     return render_template('index.html', text=text)
 
 @app.route('/generate')
@@ -122,9 +118,8 @@ if __name__ == '__main__':
     parser.add_argument('--load_path', required=True)
     parser.add_argument('--checkpoint_step', default=None, type=int)
     parser.add_argument('--num_speakers', default=1, type=int)
-    parser.add_argument('--port', default=51000, type=int)
+    parser.add_argument('--port', default=5000, type=int)
     parser.add_argument('--debug', default=False, type=str2bool)
-    parser.add_argument('--is_korean', default=True, type=str2bool)
     config = parser.parse_args()
 
     if os.path.exists(config.load_path):

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 import string
 import argparse
@@ -103,7 +102,7 @@ def align_text_fn(
     news_path = os.path.splitext(news_path)[0] + ".txt"
 
     strip_fn = lambda line: line.strip().replace('"', '').replace("'", "")
-    candidates = [strip_fn(line) for line in open(news_path, encoding='cp949').readlines()]
+    candidates = [strip_fn(line) for line in open(news_path).readlines()]
 
     scores = { candidate: similarity(candidate, recognition_text) \
                     for candidate in candidates}
@@ -141,7 +140,7 @@ def align_text_batch(config):
             score_threshold=config.score_threshold)
 
     results = {}
-    data = load_json(config.recognition_path, encoding=config.recognition_encoding)
+    data = load_json(config.recognition_path)
 
     items = parallel_run(
             align_text, data.items(),
@@ -163,7 +162,6 @@ if __name__ == '__main__':
     parser.add_argument('--recognition_path', required=True)
     parser.add_argument('--alignment_filename', default="alignment.json")
     parser.add_argument('--score_threshold', default=0.4, type=float)
-    parser.add_argument('--recognition_encoding', default='949')
     config, unparsed = parser.parse_known_args()
 
     results = align_text_batch(config)

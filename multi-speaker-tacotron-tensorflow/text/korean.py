@@ -1,4 +1,4 @@
-﻿# Code based on 
+# Code based on 
 
 import re
 import os

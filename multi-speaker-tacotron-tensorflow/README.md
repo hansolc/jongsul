@@ -1,5 +1,7 @@
 # Multi-Speaker Tacotron in TensorFlow
 
+[[한국어 가이드](./README_ko.md)]
+
 TensorFlow implementation of:
 
 - [Deep Voice 2: Multi-Speaker Neural Text-to-Speech](https://arxiv.org/abs/1705.08947)
@@ -35,7 +37,7 @@ If you want to synthesize a speech in Korean dicrectly, follow [2-3. Download pr
 The `datasets` directory should look like:
 
     datasets
-    ├── son
+    ├── jtbc
     │   ├── alignment.json
     │   └── audio
     │       ├── 1.mp3
@@ -65,7 +67,20 @@ After you prepare as described, you should genearte preprocessed data with:
 
 ### 2-2. Generate Korean datasets
 
-Follow below commands. (explain with `son` dataset)
+You can generate datasets for 3 public Korean figures including:
+
+1. [Sohn Suk-hee](https://en.wikipedia.org/wiki/Sohn_Suk-hee): anchor and president of JTBC
+2. [Park Geun-hye](https://en.wikipedia.org/wiki/Park_Geun-hye): a former President of South Korea
+3. [Moon Jae-in](https://en.wikipedia.org/wiki/Moon_Jae-in): the current President of South Korea
+
+Each dataset can be generated with following scripts:
+
+    ./scripts/prepare_son.sh # Sohn Suk-hee
+    ./scripts/prepare_park.sh # Park Geun-hye
+    ./scripts/prepare_moon.sh # Moon Jae-in
+
+
+Each script execute below commands. (explain with `son` dataset)
 
 0. To automate an alignment between sounds and texts, prepare `GOOGLE_APPLICATION_CREDENTIALS` to use [Google Speech Recognition API](https://cloud.google.com/speech/). To get credentials, read [this](https://developers.google.com/identity/protocols/application-default-credentials).
 
@@ -79,7 +94,7 @@ Follow below commands. (explain with `son` dataset)
 
        python3 -m audio.silence --audio_pattern "./datasets/son/audio/*.wav" --method=pydub
 
-3. By using [Google Speech Recognition API](https://cloud.google.com/speech/), we predict sentences for all segmented audios.
+3. By using [Google Speech Recognition API](https://cloud.google.com/speech/), we predict sentences for all segmented audios. (this is optional for `moon` and `park` because they already have `recognition.json`)
 
        python3 -m recognition.google --audio_pattern "./datasets/son/audio/*.*.wav"
 
@@ -93,18 +108,26 @@ Follow below commands. (explain with `son` dataset)
 
 Because the automatic generation is extremely naive, the dataset is noisy. However, if you have enough datasets (20+ hours with random initialization or 5+ hours with pretrained model initialization), you can expect an acceptable quality of audio synthesis.
 
-### 2-3. Generate English datasets
 
-1. Download speech dataset at https://keithito.com/LJ-Speech-Dataset/
+### 2-3. Download pre-trained models
 
-2. Convert metadata CSV file to json file. (arguments are available for changing preferences)
-		
-		python3 -m datasets.LJSpeech_1_0.prepare
+You can download a pre-trained models or generate audio. Available models are:
 
-3. Finally, generate numpy files which will be used in training.
-		
-		python3 -m datasets.generate_data ./datasets/LJSpeech_1_0
-		
+1. Single speaker model for [Sohn Suk-hee](https://en.wikipedia.org/wiki/Sohn_Suk-hee).
+
+       python3 download.py son
+
+2. Single speaker model for [Park Geun-hye](https://en.wikipedia.org/wiki/Park_Geun-hye).
+
+       python3 download.py park
+
+After you donwload pre-trained models, you can generate voices as follows:
+
+    python3 synthesizer.py --load_path logs/son-20171015 --text "Is this real?"
+    python3 synthesizer.py --load_path logs/park-20171015 --text "Is this real?"
+
+**WARNING: The two pre-trained models are being made available for research purpose only.**
+
 
 ### 3. Train a model
 
@@ -114,13 +137,13 @@ The important hyperparameters for a models are defined in `hparams.py`.
 
 To train a single-speaker model:
 
-    python3 train.py --data_path=datasets/son
-    python3 train.py --data_path=datasets/son --initialize_path=PATH_TO_CHECKPOINT
+    python3 train.py --data_path=datasets/jtbc
+    python3 train.py --data_path=datasets/park --initialize_path=PATH_TO_CHECKPOINT
 
 To train a multi-speaker model:
 
     # after change `model_type` in `hparams.py` to `deepvoice` or `simple`
-    python3 train.py --data_path=datasets/son1,datasets/son2
+    python3 train.py --data_path=datasets/jtbc,datasets/park
 
 To restart a training from previous experiments such as `logs/son-20171015`:
 
@@ -133,28 +156,11 @@ If you don't have good and enough (10+ hours) dataset, it would be better to use
 
 You can train your own models with:
 
-    python3 app.py --load_path logs/son-20171015 --num_speakers=1
+    python3 app.py --load_path logs/park-20171015 --num_speakers=1
 
 or generate audio directly with:
 
-    python3 synthesizer.py --load_path logs/son-20171015 --text "이거 실화냐?"
-	
-### 4-1. Synthesizing non-korean(english) audio
-
-For generating non-korean audio, you must set the argument --is_korean False.
-		
-	python3 app.py --load_path logs/LJSpeech_1_0-20180108 --num_speakers=1 --is_korean=False
-	python3 synthesizer.py --load_path logs/LJSpeech_1_0-20180108 --text="Winter is coming." --is_korean=False
-
-## Results
-
-Training attention on single speaker model:
-
-![model](./assets/attention_single_speaker.gif)
-
-Training attention on multi speaker model:
-
-![model](./assets/attention_multi_speaker.gif)
+    python3 synthesizer.py --load_path logs/park-20171015 --text "이거 실화냐?"
 
 
 ## Disclaimer
@@ -165,7 +171,7 @@ This is not an official [DEVSISTERS](http://devsisters.com/) product. This proje
 ## References
 
 - [Keith Ito](https://github.com/keithito)'s [tacotron](https://github.com/keithito/tacotron)
-- [DEVIEW 2017 presentation](https://www.slideshare.net/carpedm20/deview-2017-80824162)
+- [DEVIEW 2017 presentation](https://deview.kr/2017/schedule/182) (Korean)
 
 
 ## Author
